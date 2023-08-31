@@ -259,4 +259,122 @@ def GreedyMotifSearchWithPseudocounts(Dna, k, t):
 
     return BestMotifs
 
+def Motifs(Profile, Dna):
+    """
+    Find the Profile-most probable k-mers in a list of DNA sequences based on the provided profile matrix.
+
+    Args:
+        Profile (dict): The profile matrix as a dictionary of lists.
+        Dna (list): A list of DNA sequences.
+
+    Returns:
+        list: A list of Profile-most probable k-mers, one for each DNA sequence in Dna.
+    """
+    k = len(Profile['A'])
+    most_probable_kmers = []
+
+    for text in Dna:
+        most_probable_kmer = ProfileMostProbablePattern(text, k, Profile)
+        most_probable_kmers.append(most_probable_kmer)
+
+    return most_probable_kmers
+
+# Random Motifs
+
+import random
+
+def RandomMotifs(Dna, k, t):
+    """
+    Generate a list of random k-mers from a list of DNA strings.
+
+    Args:
+        Dna (list): A list of DNA strings.
+        k (int): The length of k-mers to be generated.
+        t (int): The number of strings in Dna.
+
+    Returns:
+        list: A list of random k-mers, one from each string in Dna.
+    """
+    random_motifs = []
+    for i in range(t):
+        start = random.randint(0, len(Dna[i]) - k) # Generate a random startint index
+        random_motif = Dna[i][start:start + k] # Extract the random k-mer
+        random_motifs.append(random_motif)
+    
+    return random_motifs
+
+def RandomizedMotifSearch(Dna, k, t):
+    """
+    Perform the Randomized Motif Search algorithm to fin the best-scoring motifs in a list of DNA strings.
+
+    Args:
+        Dna (list): A list of DNA strings.
+        k (int): The length of motifs to search for.
+        t (int): The number of DNA strings in Dna.
+
+    Returns:
+        list: A list of best-scoring motifs found.
+    """
+    M = RandomMotifs(Dna, k, t)
+    BestMotifs = M
+
+    while True:
+        Profile = ProfileWithPseudocounts(M)
+        M = Motifs(Profile, Dna)
+        if Score(M) < Score(BestMotifs):
+            BestMotifs = M
+        else:
+            return BestMotifs
+
+def Normalize(Probabilities):
+    """
+    Normalize a dictionary of probabilities.
+
+    Args:
+        Probabilities (dict): A dictionary where keys are k-mers and values are their probabilities.
+
+    Returns:
+        dict: A normalized dictionary where the probability of each k-mer is divided by the sum of all probabilities.
+    """
+    total_sum = sum(Probabilities.values())
+    normalized_probs = {kmer: prob / total_sum for kmer, prob in Probabilities.items()}
+    return normalized_probs
+
+def WeightedDie(Probabilities):
+    """
+    Choose a k-mer randomly with respect to the given probabilities.
+
+    Args:
+        Probabilities (dict): A dictionary where keys are k-mers and values are their probabilities.
+
+    Returns:
+        str: A randomly chosen k-mer with respect to the probabilities.
+    """
+    p = random.uniform(0, 1)
+    total = 0
+    for kmer, prob in Probabilities.items():
+        total += prob
+        if p < total:
+            return kmer
+
+def ProfileGeneratedString(Text, profile, k):
+    """
+    Generate a k-mer randomly from Text based on a profile matrix.
+
+    Args:
+        Test (str): The input DNA string.
+        profile (dict): The profile matrix as a dictionary.
+        k (int): The length of the k-mer.
+
+    Returns:
+        str: A randomly generated k-mer from Text based on the profile matrix.
+    """
+    n = len(Text)
+    probabilities = {}
+
+    for i in range(0, n - k + 1):
+        probabilities[Text[i:i + k]] = Pr(Text[i:i + k], profile)
+
+    probabilities = Normalize(probabilities)
+    return WeightedDie(probabilities)
 
